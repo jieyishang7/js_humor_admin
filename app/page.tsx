@@ -6,12 +6,47 @@ export const dynamic = "force-dynamic";
 type Caption = { id: number; content: string; created_at: string; model: string | null; request_id: number | null; joke_id: number | null; upload_id: number | null };
 type Vote = { caption_id: number; value: number; user_id: string };
 
+const PALETTE = ["#7c3aed", "#a855f7", "#c084fc", "#6366f1", "#ec4899", "#d8b4fe"];
+
+function Donut({ rows, center, caption }: { rows: { label: string; value: number }[]; center: string; caption: string }) {
+  const total = rows.reduce((sum, r) => sum + r.value, 0);
+  if (total === 0) return <p className="muted">No data yet.</p>;
+  let start = 0;
+  const stops = rows
+    .map((r, i) => {
+      const end = start + (r.value / total) * 360;
+      const stop = `${PALETTE[i % PALETTE.length]} ${start}deg ${end}deg`;
+      start = end;
+      return stop;
+    })
+    .join(", ");
+  return (
+    <div className="donut-wrap">
+      <div className="donut" style={{ background: `conic-gradient(${stops})` }} role="img" aria-label={caption}>
+        <div className="donut-hole">
+          <strong>{center}</strong>
+          <span>{caption}</span>
+        </div>
+      </div>
+      <ul className="legend">
+        {rows.map((r, i) => (
+          <li key={r.label}>
+            <span className="swatch" style={{ background: PALETTE[i % PALETTE.length] }} />
+            <span className="legend-label">{r.label}</span>
+            <strong>{Math.round((r.value / total) * 100)}%</strong>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function Bars({ rows, unit }: { rows: { label: string; value: number; hint?: string }[]; unit: string }) {
   const max = Math.max(1, ...rows.map((r) => r.value));
   if (rows.length === 0) return <p className="muted">No data yet.</p>;
   return (
     <ul className="bars">
-      {rows.map((row) => (
+      {rows.map((row, i) => (
         <li key={row.label}>
           <div className="bar-label">
             <span title={row.label}>{row.label}</span>
@@ -20,7 +55,7 @@ function Bars({ rows, unit }: { rows: { label: string; value: number; hint?: str
             </strong>
           </div>
           <div className="bar-track">
-            <div className="bar-fill" style={{ width: `${(row.value / max) * 100}%` }} />
+            <div className="bar-fill" style={{ width: `${(row.value / max) * 100}%`, background: PALETTE[i % PALETTE.length] }} />
           </div>
           {row.hint && <p className="bar-hint">{row.hint}</p>}
         </li>
@@ -151,7 +186,7 @@ export default async function Overview() {
         </article>
         <article className="card">
           <h2>Where members are based</h2>
-          <Bars rows={areaRows} unit="people" />
+          <Donut rows={areaRows} center={String(people.length)} caption="members" />
         </article>
         <article className="card">
           <h2>Most saved to plans</h2>
@@ -159,7 +194,18 @@ export default async function Overview() {
         </article>
         <article className="card">
           <h2>What the AI has made</h2>
-          <Bars rows={kinds} unit="items" />
+          <Donut rows={kinds} center={String(media.length)} caption="AI items" />
+        </article>
+        <article className="card">
+          <h2>How people vote</h2>
+          <Donut
+            rows={[
+              { label: "♥ Upvotes", value: likes },
+              { label: "▼ Downvotes", value: downs },
+            ].filter((r) => r.value > 0)}
+            center={String(allVotes.length)}
+            caption="votes"
+          />
         </article>
         <article className="card card-quote">
           <h2>Latest mood</h2>
