@@ -11,13 +11,12 @@ const PALETTE = ["#7c3aed", "#a855f7", "#c084fc", "#6366f1", "#ec4899", "#d8b4fe
 function Donut({ rows, center, caption }: { rows: { label: string; value: number }[]; center: string; caption: string }) {
   const total = rows.reduce((sum, r) => sum + r.value, 0);
   if (total === 0) return <p className="muted">No data yet.</p>;
-  let start = 0;
   const stops = rows
     .map((r, i) => {
-      const end = start + (r.value / total) * 360;
-      const stop = `${PALETTE[i % PALETTE.length]} ${start}deg ${end}deg`;
-      start = end;
-      return stop;
+      const before = rows.slice(0, i).reduce((sum, x) => sum + x.value, 0);
+      const from = (before / total) * 360;
+      const to = ((before + r.value) / total) * 360;
+      return `${PALETTE[i % PALETTE.length]} ${from}deg ${to}deg`;
     })
     .join(", ");
   return (
