@@ -1,0 +1,74 @@
+import { AdminShell } from "@/components/AdminShell";
+import { ImageForm } from "@/components/ImageForm";
+import { requireAdmin } from "@/lib/admin";
+import { deleteImage } from "./actions";
+
+export const dynamic = "force-dynamic";
+
+/** CREATE / READ / UPDATE / DELETE images, plus a read-only view of profile photos. */
+export default async function ImagesPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {
+  const { ok, error } = await searchParams;
+  const { supabase, user } = await requireAdmin();
+
+  const [{ data: uploads }, { data: people }] = await Promise.all([
+    supabase.from("uploads").select("id, image_url, description, owner_id, created_at").order("created_at", { ascending: false }),
+    supabase.from("profiles").select("id, first_name, last_name, email, avatar_url"),
+  ]);
+  const owner = new Map((people ?? []).map((p) => [p.id, p]));
+  const avatars = (people ?? []).filter((p) => p.avatar_url);
+
+  return (
+    <AdminShell active="/images" title="Images" subtitle="Browse, upload, edit and delete user-uploaded images. Profile photos are shown below (read-only).">
+      {ok && <p className="flash flash-ok">{ok}</p>}
+      {error && <p className="flash flash-error">{error}</p>}
+
+      <details className="card create" open={!uploads?.length}>
+        <summary>＋ Upload image</summary>
+        <ImageForm adminId={user.id} />
+      </details>
+
+      <ul className="image-grid">
+        {(uploads ?? []).map((img) => {
+          const p = owner.get(img.owner_id);
+          return (
+            <li key={img.id} className="card image-card">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={img.image_url} alt={img.description ?? `Upload #${img.id}`} />
+              <p className="small"><strong>#{img.id}</strong> {img.description ?? <span className="muted">No description</span>}</p>
+              <p className="muted small">
+                {p?.first_name ?? p?.email ?? "Unknown"} · {new Date(img.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              </p>
+              <div className="row-actions">
+                <details>
+                  <summary className="btn btn-ghost btn-sm">Edit</summary>
+                  <ImageForm adminId={user.id} imageId={img.id} initialDescription={img.description ?? ""} />
+                </details>
+                <details>
+                  <summary className="btn btn-ghost btn-sm btn-danger-text">Delete</summary>
+                  <form action={deleteImage} className="confirm">
+                    <input type="hidden" name="id" value={img.id} />
+                    <span>Delete image?</span>
+                    <button className="btn btn-danger" type="submit">Yes</button>
+                  </form>
+                </details>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      {(uploads ?? []).length === 0 && <p className="muted">No uploaded images yet.</p>}
+
+      <h2 className="section-h">Profile photos</h2>
+      <ul className="avatar-grid">
+        {avatars.map((p) => (
+          <li key={p.id}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={p.avatar_url!} alt={`${p.first_name ?? p.email}'s profile photo`} />
+            <span className="small">{[p.first_name, p.last_name].filter(Boolean).join(" ") || p.email}</span>
+          </li>
+        ))}
+      </ul>
+      {avatars.length === 0 && <p className="muted">No profile photos yet.</p>}
+    </AdminShell>
+  );
+}
