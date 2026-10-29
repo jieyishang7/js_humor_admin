@@ -10,9 +10,14 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
   const { ok, error } = await searchParams;
   const { supabase, user } = await requireAdmin();
 
-  const [{ data: uploads }, { data: people }] = await Promise.all([
+  const [{ data: uploads }, { data: people }, { data: spotPics }] = await Promise.all([
     supabase.from("uploads").select("id, image_url, description, owner_id, created_at").order("created_at", { ascending: false }),
     supabase.from("profiles").select("id, first_name, last_name, email, avatar_url"),
+    supabase
+      .from("spot_images")
+      .select("id, image_url, model, prompt, profile_id, created_datetime_utc, captions(content, request_id)")
+      .order("created_datetime_utc", { ascending: false })
+      .limit(60),
   ]);
   const owner = new Map((people ?? []).map((p) => [p.id, p]));
   const avatars = (people ?? []).filter((p) => p.avatar_url);
@@ -57,6 +62,47 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
         })}
       </ul>
       {(uploads ?? []).length === 0 && <p className="muted">No uploaded images yet.</p>}
+
+      <h2 className="section-h">AI-generated spot pictures</h2>
+      <p className="muted small">Pictures members generated for recommended places (Gemini image model). Read-only.</p>
+      <ul className="image-grid">
+        {(spotPics ?? []).map((pic) => {
+          const p = owner.get(pic.profile_id);
+          const cap = (Array.isArray(pic.captions) ? pic.captions[0] : pic.captions) as { content: string; request_id: number | null } | null;
+          let name = "Spot";
+          try {
+            name = (JSON.parse(cap?.content ?? "{}") as { name?: string }).name ?? "Spot";
+          } catch {
+            name = "Spot";
+          }
+          return (
+            <li key={pic.id} className="card image-card">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={pic.image_url} alt={`AI picture of ${name}`} />
+              <p className="small">
+                <strong>{name}</strong>
+                {cap?.request_id ? (
+                  <>
+                    {" "}
+                    · <a className="link" href={`/requests/${cap.request_id}`}>request #{cap.request_id}</a>
+                  </>
+                ) : null}
+              </p>
+              <p className="muted small">
+                {p?.first_name ?? p?.email ?? "Unknown"} · {pic.model ?? "unknown model"} ·{" "}
+                {new Date(pic.created_datetime_utc).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              </p>
+              {pic.prompt && (
+                <details className="small">
+                  <summary>Prompt</summary>
+                  <p>{pic.prompt}</p>
+                </details>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      {(spotPics ?? []).length === 0 && <p className="muted">No AI spot pictures yet.</p>}
 
       <h2 className="section-h">Profile photos</h2>
       <ul className="avatar-grid">
