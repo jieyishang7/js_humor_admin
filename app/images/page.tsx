@@ -63,8 +63,8 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
       </ul>
       {(uploads ?? []).length === 0 && <p className="muted">No uploaded images yet.</p>}
 
-      <h2 className="section-h">AI-generated spot pictures</h2>
-      <p className="muted small">Pictures members generated for recommended places (Gemini image model). Read-only.</p>
+      <h2 className="section-h">Spot photos</h2>
+      <p className="muted small">Real photos attached to recommended places (from Wikipedia / Wikimedia Commons). Read-only.</p>
       <ul className="image-grid">
         {(spotPics ?? []).map((pic) => {
           const p = owner.get(pic.profile_id);
@@ -78,7 +78,7 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
           return (
             <li key={pic.id} className="card image-card">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={pic.image_url} alt={`AI picture of ${name}`} />
+              <img src={pic.image_url} alt={pic.prompt ?? `Photo of ${name}`} />
               <p className="small">
                 <strong>{name}</strong>
                 {cap?.request_id ? (
@@ -94,7 +94,7 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
               </p>
               {pic.prompt && (
                 <details className="small">
-                  <summary>Prompt</summary>
+                  <summary>Label</summary>
                   <p>{pic.prompt}</p>
                 </details>
               )}
@@ -102,7 +102,7 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
           );
         })}
       </ul>
-      {(spotPics ?? []).length === 0 && <p className="muted">No AI spot pictures yet.</p>}
+      {(spotPics ?? []).length === 0 && <p className="muted">No spot photos yet.</p>}
 
       <h2 className="section-h">Profile photos</h2>
       <ul className="avatar-grid">
