@@ -268,3 +268,34 @@ td { font-size: 14px; }
   .detail-grid { grid-template-columns: 1fr; }
   .sidebar nav { overflow: visible; }
 }
+
+/* Collapsible sidebar sections */
+.nav-section > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  margin: 4px 0 2px;
+  border-radius: 8px;
+  user-select: none;
+}
+.nav-section > summary::-webkit-details-marker { display: none; }
+.nav-section > summary:hover { background: rgba(255, 255, 255, 0.07); color: rgba(255, 255, 255, 0.8); }
+.nav-chevron {
+  display: inline-block;
+  font-size: 13px;
+  line-height: 1;
+  transform: rotate(180deg);
+  transition: transform 0.15s ease;
+}
+.nav-section[open] .nav-chevron { transform: rotate(0deg); }
+.nav-section-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-left: 14px;
+  padding-left: 6px;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+}

@@ -60,17 +60,32 @@ export async function AdminShell({ active, title, subtitle, children }: {
           </div>
         </div>
         <nav aria-label="Admin">
-          {NAV_GROUPS.map((group) => (
-            <div key={group.label || "top"} className="nav-group">
-              {group.label && <p className="nav-group-label">{group.label}</p>}
-              {group.items.map((item) => (
-                <Link key={item.href} href={item.href} className="nav-link" data-active={active === item.href}>
-                  <span aria-hidden="true" className="nav-icon">{item.icon}</span>
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          ))}
+          {NAV_GROUPS.map((group) => {
+            const links = group.items.map((item) => (
+              <Link key={item.href} href={item.href} className="nav-link" data-active={active === item.href}>
+                <span aria-hidden="true" className="nav-icon">{item.icon}</span>
+                {item.label}
+              </Link>
+            ));
+            if (!group.label) {
+              return (
+                <div key="top" className="nav-group">
+                  {links}
+                </div>
+              );
+            }
+            // Collapsible section; the one holding the current page starts open.
+            const open = group.items.some((item) => item.href === active);
+            return (
+              <details key={group.label} className="nav-group nav-section" open={open}>
+                <summary className="nav-group-label">
+                  <span>{group.label}</span>
+                  <span className="nav-chevron" aria-hidden="true">⌃</span>
+                </summary>
+                <div className="nav-section-items">{links}</div>
+              </details>
+            );
+          })}
         </nav>
         <div className="sidebar-foot">
           <p className="who">

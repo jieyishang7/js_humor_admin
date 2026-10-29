@@ -63,8 +63,8 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
       </ul>
       {(uploads ?? []).length === 0 && <p className="muted">No uploaded images yet.</p>}
 
-      <h2 className="section-h">Food photos</h2>
-      <p className="muted small">Photos of the signature dish the AI picked for each recommended place (from Wikipedia / Wikimedia Commons). Read-only.</p>
+      <h2 className="section-h">Spot photos</h2>
+      <p className="muted small">AI-generated pictures for recommended places: the dish to try at food spots, the highlight to see elsewhere. Read-only.</p>
       <ul className="image-grid">
         {(spotPics ?? []).map((pic) => {
           const p = owner.get(pic.profile_id);
@@ -102,7 +102,7 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
           );
         })}
       </ul>
-      {(spotPics ?? []).length === 0 && <p className="muted">No food photos yet.</p>}
+      {(spotPics ?? []).length === 0 && <p className="muted">No spot photos yet.</p>}
 
       <h2 className="section-h">Profile photos</h2>
       <ul className="avatar-grid">
